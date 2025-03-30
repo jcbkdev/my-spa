@@ -30,22 +30,92 @@ function RenderAboutPage() {
     <h1 class="title">About Me</h1>
     <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry...</p>`;
 }
+
+function getRandomInt(max) {
+  return Math.floor(Math.random() * max + 1);
+}
+
+function generateCaptcha() {
+  const num1 = getRandomInt(10);
+  const num2 = getRandomInt(10);
+  const operations = ["+", "-", "*"];
+  const operation = operations[getRandomInt(operations.length)];
+
+  let correctAnswer;
+  switch (operation) {
+    case "+":
+      correctAnswer = num1 + num2;
+      break;
+    case "-":
+      correctAnswer = num1 - num2;
+      break;
+    case "*":
+      correctAnswer = num1 * num2;
+      break;
+  }
+
+  return { question: `${num1} ${operation} ${num2}`, answer: correctAnswer };
+}
+
 function RenderContactPage() {
+  const captchaData = generateCaptcha();
+
   document.querySelector("main").innerHTML = `
-    <h1 class="title">Contact with me</h1>
-    <form id="contact-form">
-    <label for="name">Name:</label>
-    <input type="text" id="name" name="name" required>
-    <label for="email">Email:</label>
-    <input type="email" id="email" name="email" required>
-    <label for="message">Message:</label>
-    <textarea id="message" name="message" required></textarea>
-    <button type="submit">Send</button>
-    </form>`;
+        <h1 class="title">Contact with me</h1>
+        <form id="contact-form">
+          <label for="name">Name:</label>
+          <input type="text" id="name" name="name" required>
+          <label for="email">Email:</label>
+          <input type="email" id="email" name="email" required>
+          <label for="message">Message:</label>
+          <textarea id="message" name="message" required></textarea>
+          
+          <!-- Math CAPTCHA -->
+          <div id="captcha-container">
+            <p id="captcha-question">Solve: ${captchaData.question}</p>
+            <input type="number" id="captcha-answer" required>
+            <input type="hidden" id="captcha-correct-answer" value="${captchaData.answer}">
+          </div>
+  
+          <!-- Google reCAPTCHA widget -->
+          <div class="g-recaptcha" data-sitekey="YOUR_SITE_KEY"></div>
+          
+          <button type="submit">Send</button>
+        </form>`;
+
   document
     .getElementById("contact-form")
     .addEventListener("submit", (event) => {
       event.preventDefault();
+
+      const name = document.getElementById("name").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const message = document.getElementById("message").value.trim();
+      const captchaAnswer = parseInt(
+        document.getElementById("captcha-answer").value,
+        10
+      );
+      const correctCaptchaAnswer = parseInt(
+        document.getElementById("captcha-correct-answer").value,
+        10
+      );
+
+      if (!name || !email || !message) {
+        alert("Please fill out all fields.");
+        return;
+      }
+
+      const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+      if (!emailPattern.test(email)) {
+        alert("Please enter a valid email address.");
+        return;
+      }
+
+      if (captchaAnswer !== correctCaptchaAnswer) {
+        alert("Incorrect CAPTCHA. Please try again.");
+        return;
+      }
+
       alert("Form submitted!");
     });
 }
