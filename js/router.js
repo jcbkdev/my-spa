@@ -1,6 +1,7 @@
 let pageUrls = {
   about: "/index.html?about",
   contact: "/index.html?contact",
+  gallery: "/index.html?gallery",
 };
 function OnStartUp() {
   popStateHandler();
@@ -17,6 +18,12 @@ document.querySelector("#contact-link").addEventListener("click", (event) => {
   document.title = "Contact";
   history.pushState(stateObj, "contact", "?contact");
   RenderContactPage();
+});
+document.querySelector("#gallery-link").addEventListener("click", (event) => {
+  let stateObj = { page: "gallery" };
+  document.title = "Gallery";
+  history.pushState(stateObj, "gallery", "?gallery");
+  RenderGalleryPage();
 });
 function RenderAboutPage() {
   document.querySelector("main").innerHTML = `
@@ -42,12 +49,99 @@ function RenderContactPage() {
       alert("Form submitted!");
     });
 }
+
+function lazyload() {
+  const lazyLoadImages = document.querySelectorAll(".lazy");
+
+  const imageObserver = new IntersectionObserver((entries, observer) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        const lazyImage = entry.target;
+        lazyImage.src = lazyImage.dataset.src;
+        lazyImage.classList.remove("lazy");
+        imageObserver.unobserve(lazyImage);
+      }
+    });
+  });
+
+  lazyLoadImages.forEach((lazyImage) => {
+    imageObserver.observe(lazyImage);
+  });
+}
+
+document.addEventListener("DOMContentLoaded", lazyload);
+
+async function loadImages() {
+  let images = [];
+  for (let i = 1; i <= 9; i++) {
+    const response = await fetch(`/gallery/${i}.jpg`);
+    if (response.ok) {
+      const blob = await response.blob();
+      const imageUrl = URL.createObjectURL(blob);
+      const imgElement = document.createElement("img");
+      imgElement.src = imageUrl;
+      imgElement.setAttribute("loading", "lazy");
+      imgElement.classList.add("lazy");
+      imgElement.classList.add("gallery-image");
+      imgElement.addEventListener("click", previewImage);
+      images.push(imgElement);
+    }
+  }
+  return images;
+}
+
+function previewImage(e) {
+  // Create a dialog element
+  const dialog = document.createElement("dialog");
+  dialog.id = "modal";
+
+  const img = document.createElement("img");
+  img.src = e.target.src;
+
+  dialog.innerHTML = `
+        <button id="close-btn">X</button>
+    `;
+
+  dialog.appendChild(img);
+
+  // Append the dialog to the body
+  document.body.appendChild(dialog);
+
+  dialog.showModal();
+  // Add event listener to close button
+  document.getElementById("close-btn").addEventListener("click", () => {
+    dialog.close();
+    document.body.removeChild(dialog); // Remove dialog after closing
+  });
+}
+
+function RenderGalleryPage() {
+  loadImages().then((data) => {
+    console.log("data", data);
+    const galleryElement = document.querySelector("#gallery");
+    data.forEach((img) => {
+      galleryElement.appendChild(img);
+    });
+    return;
+  });
+
+  document.querySelector("main").innerHTML = `
+        <h1 class="title">Gallery</h1>
+        <div id="gallery">
+            
+        </div>
+    `;
+}
+
 function popStateHandler() {
   let loc = window.location.href.toString().split(window.location.host)[1];
   if (loc === pageUrls.contact) {
     RenderContactPage();
   }
   if (loc === pageUrls.about) {
+    RenderAboutPage();
+  }
+  if (loc === pageUrls.gallery) {
     RenderAboutPage();
   }
 }
