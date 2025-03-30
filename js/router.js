@@ -144,7 +144,7 @@ document.addEventListener("DOMContentLoaded", lazyload);
 async function loadImages() {
   let images = [];
   for (let i = 1; i <= 9; i++) {
-    const response = await fetch(`/gallery/${i}.jpg`);
+    const response = await fetch(`/my-spa/gallery/${i}.jpg`);
     if (response.ok) {
       const blob = await response.blob();
       const imageUrl = URL.createObjectURL(blob);
